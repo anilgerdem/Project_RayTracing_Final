@@ -12,7 +12,7 @@ class Ray {
     Point3 origin() const { return orig; }
     Vec3 direction() const { return dir; }
 
-    Point3 point_at(float t) const { return orig + t * dir; }
+    Point3 at(float t) const { return orig + t * dir; }
 
   public:
     Point3 orig; 

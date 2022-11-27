@@ -51,14 +51,14 @@ target_sources(
     [[swMaterial.h]]
     [[swPrimitive.h]]
     [[swRay.h]]
-    [[swScene.cpp]]
+    
     [[swScene.h]]
-    [[swSphere.cpp]]
+    
+    
     [[swSphere.h]]
-    [[swTriangle.cpp]]
     [[swTriangle.h]]
     [[swVec3.h]]
-)
+  "swHittable_list.h")
 target_compile_definitions(
   raytracer
   PRIVATE

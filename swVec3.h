@@ -70,6 +70,7 @@ class Vec3 {
     // CODE: Ray Tracing in one Weekend
 
     Vec3 operator+() const { return Vec3(m[0], m[1], m[2]); } // for consistency; + operator, - is defined above
+    Vec3 operator+(float a) const { return Vec3(a + m[0], a + m[1], a + m[2]); } // good to have Vec3 + float function
     Vec3 operator/(float a) const { return Vec3(m[0] / a, m[1] / a, m[2] / a); }
 
     //Vec3 &operator+=(const Vec3 &v); //ALREADY DEFINED

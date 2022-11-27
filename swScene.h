@@ -12,7 +12,7 @@ namespace sw {
 
 class Scene {
   public:
-    void push(const Sphere &s) { primitives.push_back(std::make_shared<Sphere>(s)); }
+    //void push(const Sphere &s) { primitives.push_back(std::make_shared<Sphere>(s)); }
     void push(const Triangle &t) { primitives.push_back(std::make_shared<Triangle>(t)); }
     bool intersect(const Ray &r, Intersection &isect, bool any = false);
 

@@ -65,7 +65,7 @@ void writeColor(int index, Vec3 p, uint8_t *pixels) {
 // In the guide, it is called Ray_color
 
 // Combination of assigment sphere:intersection and the book
-bool hit_sphere(const Point3 &center, float radius, const Ray &r) {
+float hit_sphere(const Point3 &center, float radius, const Ray &r) {
     Vec3 o = r.orig - center;
     Vec3 d = r.dir;
 
@@ -75,18 +75,23 @@ bool hit_sphere(const Point3 &center, float radius, const Ray &r) {
     float C = o * o - radius * radius;
 
     float discri = B * B - 4.0f * A * C;
-    return (discri > 0.0f);
+    if (discri < 0.0f) {
+        return -1.0f;
+    } else {
+        return (-B - std::sqrt(discri)) / (2.0f * A);
+    }
 }
 
 Color ray_color(const Ray &r) {
-    if ( hit_sphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, r) )
-        return Color(1.0f, 0.0f, 0.0f);
+    float t = hit_sphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, r);
+    if (t > 0.0) {
+        Vec3 N = (r.at(t) - Point3(0.0f, 0.0f, -1.0f)).normalize();
+        return 0.5 * (N + 1.0f); // Mapping points from -1:1 to 0:1
+    }
 
-    Vec3 normal_direction = r.direction().normalize();
-    auto t = 0.5f * (normal_direction.y() + 1.0f);
+     Vec3 normal_direction = r.direction().normalize();
+     t = 0.5f * (normal_direction.y() + 1.0f);
     return (1.0 - t) * Color(1.0f, 1.0f, 1.0f) + t * Color(0.5f, 0.7f, 1.0f);
-
-    //return r.direction().normalize();
 }
 
 int main() {
@@ -138,7 +143,7 @@ int main() {
 
     // IMAGE WILL BE FLIPPED LATER
     // Save image to file
-    stbi_write_png("out.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
+    stbi_write_png("out13.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
 
     // Free allocated memory
     delete[] pixels;
