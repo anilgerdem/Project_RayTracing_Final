@@ -5,6 +5,17 @@
  *  Created by Michael Doggett on 2021-09-23.
  *  Copyright (c) 2021 Michael Doggett
  */
+
+/*
+Combining EDAN35 High Performance Computer Graphics Assignment 1with Raytracing in One Weekend for the course project
+
+Title (series): “Ray Tracing in One Weekend Series”
+Title (book): “Ray Tracing in One Weekend”
+Author: Peter Shirley Editors: Steve Hollasch, Trevor David Black
+Version/Edition: v3.2.3 Date: 2020-12-07 URL (series):
+https://raytracing.github.io/ URL (book): https://raytracing.github.io/books/RayTracingInOneWeekend.html 
+
+*/
 #define _USE_MATH_DEFINES
 #include <cfloat>
 #include <cmath>
@@ -51,6 +62,8 @@ void writeColor(int index, Vec3 p, uint8_t *pixels) {
     }
 }
 
+// In the guide, it is called Ray_color
+
 Color traceRay(const Ray &r, Scene scene, int depth) {
     Color c, directColor, reflectedColor, refractedColor;
     if (depth < 0) return c;
@@ -69,93 +82,57 @@ Color traceRay(const Ray &r, Scene scene, int depth) {
     return c;
 }
 
+Color ray_color(const Ray &r) {
+    Vec3 normal_direction = r.direction().normalize();
+    auto t = 0.5f * (normal_direction.y() + 1.0f);
+    return (1.0 - t) * Color(1.0f, 1.0f, 1.0f) + t * Color(0.5f, 0.7f, 1.0f);
+
+    //return r.direction().normalize();
+}
+
 int main() {
-    const int imageWidth = 512;
-    const int imageHeight = imageWidth;
+
+    // Defining image features
+    const float aspect_ratio = 16.0f / 9.0f;
+    const int imageWidth = 800;
+    const int imageHeight = static_cast<int>(imageWidth/aspect_ratio);
     const int numChannels = 3;
     uint8_t *pixels = new uint8_t[imageWidth * imageHeight * numChannels];
 
-    // Define materials
-    Material whiteDiffuse = Material(Color(0.9f, 0.9f, 0.9f), 0.0f, 0.0f, 1.0f);
-    Material greenDiffuse = Material(Color(0.1f, 0.6f, 0.1f), 0.0f, 0.0f, 1.0f);
-    Material redDiffuse = Material(Color(1.0f, 0.1f, 0.1f), 0.0f, 0.0f, 1.0f);
-    Material blueDiffuse = Material(Color(0.0f, 0.2f, 0.9f), 0.0f, 0.0f, 1.0f);
-    Material yellowReflective = Material(Color(1.0f, 0.6f, 0.1f), 0.2f, 0.0f, 1.0f);
-    Material transparent = Material(Color(1.0f, 1.0f, 1.0f), 0.2f, 0.8f, 1.3f);
+    // Camera set up
+    float viewport_height = 2.0f;
+    float viewport_width = aspect_ratio * viewport_height;
+    float focal_length = 1.0f;
 
-    // Setup scene
-    Scene scene;
+    Point3 origin = Point3(0.0f, 0.0f, 0.0f);
+    Vec3 horizontal = Vec3(viewport_width, 0.0f, 0.0f);
+    Vec3 vertical = Vec3(0.0f, viewport_height, 0.0f);
+    Point3 lower_left = origin - horizontal / 2.0f - vertical / 2.0f - Vec3(0.0f, 0.0f, focal_length);
 
-    // Add three spheres with diffuse material
-    scene.push(Sphere(Vec3(-7.0f, 3.0f, -20.0f), 3.0f, greenDiffuse));
-    scene.push(Sphere(Vec3(0.0f, 3.0f, -20.0f), 3.0f, blueDiffuse));
-    scene.push(Sphere(Vec3(7.0f, 3.0f, -20.0f), 3.0f, redDiffuse));
-
-    // Define vertices for Cornell box
-    Vec3 vertices[] = {
-      Vec3(-20.0f, 0.0f, 50.0f),  Vec3(20.0f, 0.0f, 50.0f),    Vec3(20.0f, 0.0f, -50.0f),   // Floor 1
-      Vec3(-20.0f, 0.0f, 50.0f),  Vec3(20.0f, 0.0f, -50.0f),   Vec3(-20.0f, 0.0f, -50.0f),  // Floor 2
-      Vec3(-20.0f, 0.0f, -50.0f), Vec3(20.0f, 0.0f, -50.0f),   Vec3(20.0f, 40.0f, -50.0f),  // Back wall 1
-      Vec3(-20.0f, 0.0f, -50.0f), Vec3(20.0f, 40.0f, -50.0f),  Vec3(-20.0f, 40.0f, -50.0f), // Back wall 2
-      Vec3(-20.0f, 40.0f, 50.0f), Vec3(-20.0f, 40.0f, -50.0f), Vec3(20.0f, 40.0f, 50.0f),   // Ceiling 1
-      Vec3(20.0f, 40.0f, 50.0f),  Vec3(-20.0f, 40.0f, -50.0f), Vec3(20.0f, 40.0f, -50.0f),  // Ceiling 2
-      Vec3(-20.0f, 0.0f, 50.0f),  Vec3(-20.0f, 40.0f, -50.0f), Vec3(-20.0f, 40.0f, 50.0f),  // Red wall 1
-      Vec3(-20.0f, 0.0f, 50.0f),  Vec3(-20.0f, 0.0f, -50.0f),  Vec3(-20.0f, 40.0f, -50.0f), // Red wall 2
-      Vec3(20.0f, 0.0f, 50.0f),   Vec3(20.0f, 40.0f, -50.0f),  Vec3(20.0f, 40.0f, 50.0f),   // Green wall 1
-      Vec3(20.0f, 0.0f, 50.0f),   Vec3(20.0f, 0.0f, -50.0f),   Vec3(20.0f, 40.0f, -50.0f)   // Green wall 2
-    };
-
-    // TODO: Uncomment to render floor triangles
-    // scene.push(Triangle(&vertices[0], whiteDiffuse)); // Floor 1
-    // scene.push(Triangle(&vertices[3], whiteDiffuse)); // Floor 2
-
-    // TODO: Uncomment to render Cornell box
-    // scene.push(Triangle(&vertices[6], whiteDiffuse));  // Back wall 1
-    // scene.push(Triangle(&vertices[9], whiteDiffuse));  // Back wall 2
-    // scene.push(Triangle(&vertices[12], whiteDiffuse)); // Ceiling 1
-    // scene.push(Triangle(&vertices[15], whiteDiffuse)); // Ceiling 2
-    // scene.push(Triangle(&vertices[18], redDiffuse));   // Red wall 1
-    // scene.push(Triangle(&vertices[21], redDiffuse));   // Red wall 2
-    // scene.push(Triangle(&vertices[24], greenDiffuse)); // Green wall 1
-    // scene.push(Triangle(&vertices[27], greenDiffuse)); // Green wall 2
-
-    // TODO: Uncomment to render reflective spheres
-    // scene.push(Sphere(Vec3(7.0f, 3.0f, 0.0f), 3.0f, yellowReflective));
-    // scene.push(Sphere(Vec3(9.0f, 10.0f, 0.0f), 3.0f, yellowReflective));
-
-    // TODO: Uncomment to render refractive spheres
-    // scene.push(Sphere(Vec3(-7.0f, 3.0f, 0.0f), 3.0f, transparent));
-    // scene.push(Sphere(Vec3(-9.0f, 10.0f, 0.0f), 3.0f, transparent));
-
-    // Setup camera
-    Vec3 eye(0.0f, 10.0f, 30.0f);
-    Vec3 lookAt(0.0f, 10.0f, -5.0f);
-    Vec3 up(0.0f, 1.0f, 0.0f);
-    Camera camera(eye, lookAt, up, 52.0f, (float)imageWidth / (float)imageHeight);
-    camera.setup(imageWidth, imageHeight);
 
     // Ray trace pixels
     int depth = 3;
     std::cout << "Rendering... ";
     clock_t start = clock();
-    for (int j = 0; j < imageHeight; ++j) {
+
+    // In the guide, it starts scanning  from lower left,
+    // This will be fixed later
+    for (int j = imageHeight - 1; j >= 0; --j) {
         for (int i = 0; i < imageWidth; ++i) {
 
-            Color pixel;
+            float u = float(i) / (imageWidth - 1);
+            float v = float(j) / (imageHeight - 1);
+            Vec3 ray_direction = lower_left + u * horizontal + v * vertical - origin;
+            Ray r = Ray(origin, ray_direction);
 
-            // Get center of pixel coordinate
-            float cx = ((float)i) + 0.5f;
-            float cy = ((float)j) + 0.5f;
-
-            // Get a ray and trace it
-            Ray r = camera.getRay(cx, cy);
-            pixel = traceRay(r, scene, depth);
+            Color pixel_color = ray_color(r);
 
             // Write pixel value to image
-            writeColor((j * imageWidth + i) * numChannels, pixel, pixels);
+            writeColor((j * imageWidth + i) * numChannels, pixel_color, pixels);
         }
     }
 
+    // IMAGE SHOULD BE FLIPPED FROM UP TO DOWN LATER
     // Save image to file
     stbi_write_png("out.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
 

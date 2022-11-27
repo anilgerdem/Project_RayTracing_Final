@@ -1,19 +1,21 @@
 #pragma once
 
 #include "swVec3.h"
-
+// Updated according to Ray Tracing in One Weekend,  Vec3 >> Point3 for points.
 namespace sw {
 
 class Ray {
   public:
     Ray() = default;
-    Ray(const Vec3 &o, const Vec3 &d, float t0 = 0.0f, float t1 = FLT_MAX) : orig(o), dir(d), minT(t0), maxT(t1) {}
+    Ray(const Point3 &o, const Vec3 &d, float t0 = 0.0f, float t1 = FLT_MAX) : orig(o), dir(d), minT(t0), maxT(t1) {}
 
-    Vec3 origin() const { return orig; }
+    Point3 origin() const { return orig; }
     Vec3 direction() const { return dir; }
 
+    Point3 point_at_t(float t) const { return orig + t * dir; }
+
   public:
-    Vec3 orig;
+    Point3 orig; 
     Vec3 dir;
     float minT{0.0f};
     float maxT{FLT_MAX};
