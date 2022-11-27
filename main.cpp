@@ -64,25 +64,24 @@ void writeColor(int index, Vec3 p, uint8_t *pixels) {
 
 // In the guide, it is called Ray_color
 
-Color traceRay(const Ray &r, Scene scene, int depth) {
-    Color c, directColor, reflectedColor, refractedColor;
-    if (depth < 0) return c;
+// Combination of assigment sphere:intersection and the book
+bool hit_sphere(const Point3 &center, float radius, const Ray &r) {
+    Vec3 o = r.orig - center;
+    Vec3 d = r.dir;
 
-    Intersection hit, shadow;
-    if (!scene.intersect(r, hit)) return Color(0.0f, 0.0f, 0.0f); // Background color
+    // Compute polynom coefficients.
+    float A = d * d;
+    float B = 2.0f * d * o;
+    float C = o * o - radius * radius;
 
-    const Vec3 lightPos(0.0f, 30.0f, -5.0f);
-    Vec3 lightDir = lightPos - hit.position;
-    lightDir.normalize();
-
-    directColor = Color(1.0f, 1.0f, 1.0f);
-
-    c = directColor;
-
-    return c;
+    float discri = B * B - 4.0f * A * C;
+    return (discri > 0.0f);
 }
 
 Color ray_color(const Ray &r) {
+    if ( hit_sphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, r) )
+        return Color(1.0f, 0.0f, 0.0f);
+
     Vec3 normal_direction = r.direction().normalize();
     auto t = 0.5f * (normal_direction.y() + 1.0f);
     return (1.0 - t) * Color(1.0f, 1.0f, 1.0f) + t * Color(0.5f, 0.7f, 1.0f);
@@ -93,7 +92,7 @@ Color ray_color(const Ray &r) {
 int main() {
 
     // Defining image features
-    const float aspect_ratio = 16.0f / 9.0f;
+    const float aspect_ratio = 16.0f / 9.0f; // 1.0f;
     const int imageWidth = 800;
     const int imageHeight = static_cast<int>(imageWidth/aspect_ratio);
     const int numChannels = 3;
@@ -107,6 +106,7 @@ int main() {
     Point3 origin = Point3(0.0f, 0.0f, 0.0f);
     Vec3 horizontal = Vec3(viewport_width, 0.0f, 0.0f);
     Vec3 vertical = Vec3(0.0f, viewport_height, 0.0f);
+    // This assigment starts scanning from top left, but it will be flipped later
     Point3 lower_left = origin - horizontal / 2.0f - vertical / 2.0f - Vec3(0.0f, 0.0f, focal_length);
 
 
@@ -114,6 +114,7 @@ int main() {
     int depth = 3;
     std::cout << "Rendering... ";
     clock_t start = clock();
+
 
     // In the guide, it starts scanning  from lower left,
     // This will be fixed later
@@ -127,12 +128,15 @@ int main() {
 
             Color pixel_color = ray_color(r);
 
+          
+
             // Write pixel value to image
             writeColor((j * imageWidth + i) * numChannels, pixel_color, pixels);
+            
         }
     }
 
-    // IMAGE SHOULD BE FLIPPED FROM UP TO DOWN LATER
+    // IMAGE WILL BE FLIPPED LATER
     // Save image to file
     stbi_write_png("out.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
 
