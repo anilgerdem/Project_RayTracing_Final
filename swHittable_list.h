@@ -11,7 +11,7 @@ using std::make_shared;
 namespace sw {
     class Hittable_list : public Hittable {
   public:
-        Hittable_list() = default;
+    Hittable_list() = default;
     Hittable_list(shared_ptr<Hittable> object) { add(object); }
 
     void clear() { objects.clear(); }

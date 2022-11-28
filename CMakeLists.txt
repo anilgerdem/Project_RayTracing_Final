@@ -42,9 +42,9 @@ target_sources(
     [[main.cpp]]
     [[stb_image.h]]
     [[stb_image_write.h]]
-    [[swCamera.cpp]]
+    
     [[swCamera.h]]
-    [[swCamera.cpp]]
+    
     [[swCamera.h]]
     [[swIntersection.cpp]]
     [[swIntersection.h]]
@@ -53,12 +53,12 @@ target_sources(
     [[swRay.h]]
     
     [[swScene.h]]
-    
-    
+    [[swHittable_list.h]]
+    [[swCommons.h]]
     [[swSphere.h]]
     [[swTriangle.h]]
     [[swVec3.h]]
-  "swHittable_list.h")
+  )
 target_compile_definitions(
   raytracer
   PRIVATE

@@ -35,6 +35,8 @@ https://raytracing.github.io/ URL (book): https://raytracing.github.io/books/Ray
 #include "swScene.h"
 #include "swSphere.h"
 #include "swVec3.h"
+#include "swCommons.h"
+#include "swHittable_list.h"
 
 using namespace sw;
 
@@ -62,8 +64,9 @@ void writeColor(int index, Vec3 p, uint8_t *pixels) {
     }
 }
 
-// In the guide, it is called Ray_color
+// In the book, it is called Ray_color
 
+/*
 // Combination of assigment sphere:intersection and the book
 float hit_sphere(const Point3 &center, float radius, const Ray &r) {
     Vec3 o = r.orig - center;
@@ -81,18 +84,23 @@ float hit_sphere(const Point3 &center, float radius, const Ray &r) {
         return (-B - std::sqrt(discri)) / (2.0f * A);
     }
 }
+*/
 
-Color ray_color(const Ray &r) {
-    float t = hit_sphere(Point3(0.0f, 0.0f, -1.0f), 0.5f, r);
-    if (t > 0.0) {
-        Vec3 N = (r.at(t) - Point3(0.0f, 0.0f, -1.0f)).normalize();
-        return 0.5 * (N + 1.0f); // Mapping points from -1:1 to 0:1
+
+Color ray_color(const Ray &r, Hittable &world) {
+
+    hit_record rec;
+    if (world.hit(r, 0.001, FLT_MAX, rec)) {
+        return 0.5 * (rec.normal + 1.0f); // Mapping points from -1:1 to 0:1 , Vec3 and float addition is defined
+    } else {
+        Vec3 normal_direction = r.direction().normalize();
+        float t = 0.5f * (normal_direction.y() + 1.0f);
+        return (1.0 - t) * Color(1.0f, 1.0f, 1.0f) + t * Color(0.5f, 0.7f, 1.0f);
+    }
     }
 
-     Vec3 normal_direction = r.direction().normalize();
-     t = 0.5f * (normal_direction.y() + 1.0f);
-    return (1.0 - t) * Color(1.0f, 1.0f, 1.0f) + t * Color(0.5f, 0.7f, 1.0f);
-}
+
+
 
 int main() {
 
@@ -103,17 +111,15 @@ int main() {
     const int numChannels = 3;
     uint8_t *pixels = new uint8_t[imageWidth * imageHeight * numChannels];
 
-    // Camera set up
-    float viewport_height = 2.0f;
-    float viewport_width = aspect_ratio * viewport_height;
-    float focal_length = 1.0f;
+    const int super_sampling = 5;
 
-    Point3 origin = Point3(0.0f, 0.0f, 0.0f);
-    Vec3 horizontal = Vec3(viewport_width, 0.0f, 0.0f);
-    Vec3 vertical = Vec3(0.0f, viewport_height, 0.0f);
-    // This assigment starts scanning from top left, but it will be flipped later
-    Point3 lower_left = origin - horizontal / 2.0f - vertical / 2.0f - Vec3(0.0f, 0.0f, focal_length);
+    // Camera
+    Camera camera;
 
+    // Creating the scene
+    Hittable_list world;
+    world.add(make_shared<Sphere>(Point3(0.0f, 0.0f, -1.0f), 0.5f));
+    world.add(make_shared<Sphere>(Point3(0.0f, -100.5f, -1.0f), 100.f));
 
     // Ray trace pixels
     int depth = 3;
@@ -126,14 +132,26 @@ int main() {
     for (int j = imageHeight - 1; j >= 0; --j) {
         for (int i = 0; i < imageWidth; ++i) {
 
+            Color pixel_color = Color(0.0f, 0.0f, 0.0f);
+
+            //// SUPER SAMPLING
+            //Color pixel_color_ss = Color(0.0f, 0.0f, 0.0f);
+            //for (int ss=0; ss<super_sampling; ++ss) {
+            //    float u = float(i + uniform()) / (imageWidth - 1);
+            //    float v = float(j + uniform()) / (imageHeight - 1);
+            //    Ray r = camera.get_ray(u,v);
+            //    pixel_color_ss = pixel_color_ss + ray_color(r, world);
+            //}
+            //pixel_color = pixel_color_ss / super_sampling;
+            //// SUPER SAMPLING END
+
+
+            // NORMAL SAMPLING
             float u = float(i) / (imageWidth - 1);
             float v = float(j) / (imageHeight - 1);
-            Vec3 ray_direction = lower_left + u * horizontal + v * vertical - origin;
-            Ray r = Ray(origin, ray_direction);
-
-            Color pixel_color = ray_color(r);
-
-          
+            Ray r = camera.get_ray(u, v);
+            pixel_color = ray_color(r, world);
+            // NORMAL SAMPLING END
 
             // Write pixel value to image
             writeColor((j * imageWidth + i) * numChannels, pixel_color, pixels);
@@ -141,9 +159,9 @@ int main() {
         }
     }
 
-    // IMAGE WILL BE FLIPPED LATER
+    // IMAGE IS FLIPPED, IT WILL BE FIXED LATER
     // Save image to file
-    stbi_write_png("out13.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
+    stbi_write_png("out.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
 
     // Free allocated memory
     delete[] pixels;
