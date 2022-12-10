@@ -11,7 +11,7 @@ class Primitive {
     virtual bool intersect(const Ray &r, Intersection &isect) const = 0;
 
   public:
-    Material material;
+    //Material material;
 };
 
 } // namespace sw

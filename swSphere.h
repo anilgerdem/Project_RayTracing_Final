@@ -1,13 +1,19 @@
 #pragma once
 
 #include "swHittable.h"
+#include "swMaterial.h"
+
+using std::shared_ptr;
+using std::make_shared;
 
 namespace sw {
+
+    class Material;
 
 class Sphere : public Hittable {
   public:
     Sphere() = default;
-    Sphere(const Vec3 &c, const float &r) : center(c), radius(r) {}
+    Sphere(const Vec3 &c, const float &r, shared_ptr<Material> m) : center(c), radius(r), mat_ptr(m) {}
     Sphere(const Sphere &s) = default;
     Sphere(Sphere &&) = default;
     Sphere &operator=(Sphere &&) = default;
@@ -17,6 +23,7 @@ class Sphere : public Hittable {
   public:
     Vec3 center;
     float radius{0.0f};
+    shared_ptr<Material> mat_ptr;
 };
 
 bool Sphere::hit(const Ray &r, float t_min, float t_max, hit_record &rec) const {
@@ -50,6 +57,7 @@ bool Sphere::hit(const Ray &r, float t_min, float t_max, hit_record &rec) const 
     rec.p = r.at(rec.t);
     Vec3 outward_normal = (rec.p - center) / radius;
     rec.set_face_normal(r, outward_normal);
+    rec.mat_ptr = mat_ptr;
 
     return true;
 };

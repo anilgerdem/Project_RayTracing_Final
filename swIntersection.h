@@ -16,7 +16,7 @@ class Intersection {
     Vec3 normal;
     float hitT{FLT_MAX};
     bool frontFacing{true};
-    Material material;
+    //Material material;
     Ray ray; // incoming ray that creates intersection
 };
 

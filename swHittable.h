@@ -1,13 +1,18 @@
 #pragma once
 
 #include "swRay.h"
+using std::shared_ptr;
+using std::make_shared;
+
 namespace sw {
+
+    class Material;
 
 struct hit_record {
     float t;
     Point3 p;
     Vec3 normal;
-
+    shared_ptr<Material> mat_ptr;
     bool front_face;
 
     inline void set_face_normal(const Ray &r, const Vec3 &outward_normal) {

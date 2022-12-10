@@ -46,7 +46,7 @@ target_sources(
     [[swCamera.h]]
     
     [[swCamera.h]]
-    [[swIntersection.cpp]]
+    
     [[swIntersection.h]]
     [[swMaterial.h]]
     [[swPrimitive.h]]

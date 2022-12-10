@@ -87,11 +87,26 @@ float hit_sphere(const Point3 &center, float radius, const Ray &r) {
 */
 
 
-Color ray_color(const Ray &r, Hittable &world) {
+Color ray_color(const Ray &r, Hittable &world, int depth) {
 
     hit_record rec;
-    if (world.hit(r, 0.001, FLT_MAX, rec)) {
-        return 0.5 * (rec.normal + 1.0f); // Mapping points from -1:1 to 0:1 , Vec3 and float addition is defined
+
+    if (depth <= 0) return Color(0.0f, 0.0f, 0.0f);
+
+    if (world.hit(r, 0.001f, FLT_MAX, rec)) {
+        //Point3 target = rec.p + rec.normal + random_unit_vector();
+        ////return  0.5 * (rec.normal + 1.0f); // Mapping points from -1:1 to 0:1 , Vec3 and float addition is defined  // for testing Color( 1.0f, 1.0f, 1.0f); //
+        //return 0.5 * ray_color(Ray(rec.p, target - rec.p), world, depth - 1);
+
+        Ray scattered;
+        Color attenuation;
+        if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
+            Color col = ray_color(scattered, world, depth - 1);
+            return Color(attenuation.x() * col.x(), attenuation.y() * col.y(), attenuation.z() * col.z());
+        }
+        return Color(0.0f, 0.0f, 0.0f);
+            
+
     } else {
         Vec3 normal_direction = r.direction().normalize();
         float t = 0.5f * (normal_direction.y() + 1.0f);
@@ -112,14 +127,22 @@ int main() {
     uint8_t *pixels = new uint8_t[imageWidth * imageHeight * numChannels];
 
     const int super_sampling = 5;
+    const int max_depth = 1000;
 
     // Camera
     Camera camera;
 
     // Creating the scene
     Hittable_list world;
-    world.add(make_shared<Sphere>(Point3(0.0f, 0.0f, -1.0f), 0.5f));
-    world.add(make_shared<Sphere>(Point3(0.0f, -100.5f, -1.0f), 100.f));
+    auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
+    auto material_center = make_shared<Lambertian>(Color(0.7, 0.3, 0.3));
+    auto material_left = make_shared<Metal>(Color(0.8, 0.8, 0.8), 0.3f);
+    auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 1.0f);
+
+    world.add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
+    world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
+    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
+    world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
 
     // Ray trace pixels
     int depth = 3;
@@ -128,29 +151,29 @@ int main() {
 
 
     // In the guide, it starts scanning  from lower left,
-    // This will be fixed later
+    // This will be fixed later  //int j = imageHeight - 1; j >= 0; --j   //int j = 0; j < imageHeight; ++j
     for (int j = imageHeight - 1; j >= 0; --j) {
         for (int i = 0; i < imageWidth; ++i) {
 
             Color pixel_color = Color(0.0f, 0.0f, 0.0f);
 
             //// SUPER SAMPLING
-            //Color pixel_color_ss = Color(0.0f, 0.0f, 0.0f);
-            //for (int ss=0; ss<super_sampling; ++ss) {
-            //    float u = float(i + uniform()) / (imageWidth - 1);
-            //    float v = float(j + uniform()) / (imageHeight - 1);
-            //    Ray r = camera.get_ray(u,v);
-            //    pixel_color_ss = pixel_color_ss + ray_color(r, world);
-            //}
-            //pixel_color = pixel_color_ss / super_sampling;
+            Color pixel_color_ss = Color(0.0f, 0.0f, 0.0f);
+            for (int ss=0; ss<super_sampling; ++ss) {
+                float u = float(i + uniform()) / (imageWidth - 1);
+                float v = float(j + uniform()) / (imageHeight - 1);
+                Ray r = camera.get_ray(u,v);
+                pixel_color_ss = pixel_color_ss + ray_color(r, world, max_depth);
+            }
+            pixel_color = pixel_color_ss / super_sampling;
             //// SUPER SAMPLING END
 
 
             // NORMAL SAMPLING
-            float u = float(i) / (imageWidth - 1);
-            float v = float(j) / (imageHeight - 1);
-            Ray r = camera.get_ray(u, v);
-            pixel_color = ray_color(r, world);
+            //float u = float(i) / (imageWidth - 1);
+            //float v = float(j) / (imageHeight - 1);
+            //Ray r = camera.get_ray(u, v);
+            //pixel_color = ray_color(r, world, max_depth);
             // NORMAL SAMPLING END
 
             // Write pixel value to image
@@ -160,6 +183,7 @@ int main() {
     }
 
     // IMAGE IS FLIPPED, IT WILL BE FIXED LATER
+
     // Save image to file
     stbi_write_png("out.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
 

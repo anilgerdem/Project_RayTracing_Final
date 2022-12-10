@@ -4,6 +4,7 @@
 #include <cfloat>
 #include <cmath>
 #include <iostream>
+#include <random>
 
 using std::sqrt;
 
@@ -99,6 +100,12 @@ class Vec3 {
     float length() const { return sqrt(length_squared()); }
 
     float length_squared() const { return m[0] * m[0] + m[1] * m[1] + m[2] * m[2]; }
+
+    bool near_zero() const {
+        const auto s = 1e-8;
+        return (fabs(m[0]) < s) && (fabs(m[1]) < s) && (fabs(m[2]) < s); 
+    }
+
     //CODE END 
 
   public:
@@ -107,5 +114,33 @@ class Vec3 {
 
 using Color = Vec3; // RGB color
 using Point3 = Vec3; // 3D point
+
+float uniform_random() {
+    // Will be used to obtain a seed for the random number engine
+    static std::random_device rd;
+    // Standard mersenne_twister_engine seeded with rd()
+    static std::mt19937 gen(rd());
+    static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    return dis(gen);
+}
+
+Vec3 random_in_unit_sphere() {
+    while (true) {
+        float ran1 = uniform_random() * 2.0f - 1.0f;
+        float ran2 = uniform_random() * 2.0f - 1.0f;
+        float ran3 = uniform_random() * 2.0f - 1.0f;
+
+        Vec3 point = Vec3(ran1, ran2, ran3);
+
+        if (point.length_squared() >= 1.0f) continue;
+        return point;
+    }
+
+}
+
+Vec3 random_unit_vector() { return random_in_unit_sphere().normalize(); }
+
+Vec3 reflect(const Vec3 &v, const Vec3 &n) { return v - 2.0f * (v * n) * n; }
+
 
 } // namespace sw
