@@ -143,4 +143,12 @@ Vec3 random_unit_vector() { return random_in_unit_sphere().normalize(); }
 Vec3 reflect(const Vec3 &v, const Vec3 &n) { return v - 2.0f * (v * n) * n; }
 
 
+Vec3 refract(const Vec3 &uv, const Vec3 &n, float etai_over_etat) {
+    float cos_theta = std::fmin((-uv * n), 1.0f);
+    Vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    Vec3 r_out_parallel = -sqrt(fabs(1.0f - r_out_perp.length_squared())) * n;
+
+    return r_out_perp + r_out_parallel;
+}
+
 } // namespace sw

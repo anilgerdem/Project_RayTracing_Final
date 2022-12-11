@@ -102,6 +102,7 @@ Color ray_color(const Ray &r, Hittable &world, int depth) {
         Color attenuation;
         if (rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
             Color col = ray_color(scattered, world, depth - 1);
+            //return attenuation * ray_color(scattered, world, depth - 1);
             return Color(attenuation.x() * col.x(), attenuation.y() * col.y(), attenuation.z() * col.z());
         }
         return Color(0.0f, 0.0f, 0.0f);
@@ -126,26 +127,41 @@ int main() {
     const int numChannels = 3;
     uint8_t *pixels = new uint8_t[imageWidth * imageHeight * numChannels];
 
-    const int super_sampling = 5;
+    const int super_sampling = 10;
     const int max_depth = 1000;
 
-    // Camera
-    Camera camera;
+    // Before updating camera in chapter 11
+    //// Camera
+    //Camera camera;
 
-    // Creating the scene
+
     Hittable_list world;
+    //// Creating the scene
     auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<Lambertian>(Color(0.7, 0.3, 0.3));
-    auto material_left = make_shared<Metal>(Color(0.8, 0.8, 0.8), 0.3f);
-    auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 1.0f);
+    auto material_center = make_shared<Lambertian>(Color(0.1f, 0.2f, 0.5f));
+    auto material_left = make_shared<Dialectric>(1.5f);
+    auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0f);
 
     world.add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
     world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
     world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
+    //world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
     world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
+    //// END
+
+    float R = cos(pi / 4.0f);
+
+
+    //auto material_left = make_shared<Lambertian>(Color(0.0f, 0.0f, 1.0f));
+    //auto material_right = make_shared<Lambertian>(Color(1.0f, 0.0f, 0.0f));
+
+    //world.add(make_shared<Sphere>(Point3(-R, 0.0f, -1.0f), R, material_left));
+    //world.add(make_shared<Sphere>(Point3(R, 0.0f, -1.0f), R, material_right));
+
+    Camera camera(Point3(-2.0f, 2.0f, 1.0f), Point3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f), 30.0f, aspect_ratio);
 
     // Ray trace pixels
-    int depth = 3;
+
     std::cout << "Rendering... ";
     clock_t start = clock();
 

@@ -62,4 +62,45 @@ class Metal : public Material {
     float fuzz;
 };
 
+
+class Dialectric : public Material {
+  public:
+    Dialectric(float index_of_refraction) : ir(index_of_refraction) {}
+
+    virtual bool scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const override {
+        attenuation = Color(1.0f, 1.0f, 1.0f);
+        float refraction_ratio = rec.front_face ? (1.0f / ir) : ir;
+
+        Vec3 unit_direction = r_in.direction().normalize();
+
+        float cos_theta = fmin(-unit_direction * rec.normal, 1.0f);
+        float sin_theta = sqrt(1.0f - cos_theta * cos_theta);
+
+        bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
+        Vec3 direction;
+
+        if (cannot_refract){ // Below is for schlick's approximation, it can be commented out and then glass will be more clear
+        //if (cannot_refract || reflectance(cos_theta, refraction_ratio) > uniform_random()) {
+            direction = reflect(unit_direction, rec.normal);
+        } else {
+            direction = refract(unit_direction, rec.normal, refraction_ratio);
+        }
+
+        scattered = Ray(rec.p, direction);
+        return true;
+    }
+
+    public:
+    float ir;
+
+    private:
+        static float reflectance(float cosine, float ref_index) {
+            // Schlick's approximation for reflectance , from the book
+            float r0 = (1.0f - ref_index) / (1 + ref_index);
+            r0 = r0 * r0;
+            return r0 + (1.0 - r0) * pow((1.0f - cosine), 5.0f);
+    }
+
+};
+
 } // namespace sw

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -15,4 +17,4 @@ const double pi = 3.141592;
 
 // Utility Functions
 
-inline double degrees_to_radians(double degrees) { return degrees * pi / 180.0; }
+inline float degrees_to_radians(float degrees) { return degrees * pi / 180.0; }
