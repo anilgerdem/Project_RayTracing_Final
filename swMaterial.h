@@ -63,9 +63,9 @@ class Metal : public Material {
 };
 
 
-class Dialectric : public Material {
+class Dielectric : public Material {
   public:
-    Dialectric(float index_of_refraction) : ir(index_of_refraction) {}
+    Dielectric(float index_of_refraction) : ir(index_of_refraction) {}
 
     virtual bool scatter(const Ray& r_in, const hit_record& rec, Color& attenuation, Ray& scattered) const override {
         attenuation = Color(1.0f, 1.0f, 1.0f);

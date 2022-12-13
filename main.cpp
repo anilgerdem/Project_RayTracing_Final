@@ -106,16 +106,63 @@ Color ray_color(const Ray &r, Hittable &world, int depth) {
             return Color(attenuation.x() * col.x(), attenuation.y() * col.y(), attenuation.z() * col.z());
         }
         return Color(0.0f, 0.0f, 0.0f);
-            
 
     } else {
         Vec3 normal_direction = r.direction().normalize();
         float t = 0.5f * (normal_direction.y() + 1.0f);
         return (1.0 - t) * Color(1.0f, 1.0f, 1.0f) + t * Color(0.5f, 0.7f, 1.0f);
+
+        //return Color(0.0f, 0.2f, 0.4f); // Background dark midnight blue
     }
     }
 
 
+Hittable_list random_scene() {
+        Hittable_list world;
+
+        auto ground_material = make_shared<Lambertian>(Color(0.5, 0.5, 0.5));
+        world.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, ground_material));
+
+        for (int a = -6; a < 6; a++) {
+            for (int b = -6; b < 6; b++) {
+                auto choose_mat = uniform();
+                Point3 center(a + 0.9 * uniform(), 0.2, b + 0.9 * uniform());
+
+                if ((center - Point3(4, 0.2, 0)).length() > 0.9) {
+                    shared_ptr<Material> sphere_material;
+
+                    if (choose_mat < 0.8) {
+                        // diffuse
+                        auto albedo = Color(uniform(), uniform(), uniform());
+                        sphere_material = make_shared<Lambertian>(albedo);
+                        world.add(make_shared<Sphere>(center, 0.2, sphere_material));
+                    } else if (choose_mat < 0.95) {
+                        // metal
+                        auto albedo = Color(uniform() * 0.5 + 0.5, uniform() * 0.5 + 0.5, uniform() * 0.5 + 0.5);
+                        auto fuzz = uniform();
+                        
+                        sphere_material = make_shared<Metal>(albedo, fuzz);
+                        world.add(make_shared<Sphere>(center, 0.2, sphere_material));
+                    } else {
+                        // glass
+                        sphere_material = make_shared<Dielectric>(1.5);
+                        world.add(make_shared<Sphere>(center, 0.2, sphere_material));
+                    }
+                }
+            }
+        }
+
+        auto material1 = make_shared<Dielectric>(1.5);
+        world.add(make_shared<Sphere>(Point3(0, 1, 0), 1.0, material1));
+
+        auto material2 = make_shared<Lambertian>(Color(0.4, 0.2, 0.1));
+        world.add(make_shared<Sphere>(Point3(-4, 1, 0), 1.0, material2));
+
+        auto material3 = make_shared<Metal>(Color(0.7, 0.6, 0.5), 0.0);
+        world.add(make_shared<Sphere>(Point3(4, 1, 0), 1.0, material3));
+
+        return world;
+    }
 
 
 int main() {
@@ -134,20 +181,59 @@ int main() {
     //// Camera
     //Camera camera;
 
+    //// Testing different depth, the distance between ground and circiles.
+    //Hittable_list world;
+    //auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
+    //auto material_center = make_shared<Lambertian>(Color(0.1f, 0.2f, 0.5f));
+    //auto material_left = make_shared<Dielectric>(1.5f);
+    //auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0f);
 
-    Hittable_list world;
-    //// Creating the scene
-    auto material_ground = make_shared<Lambertian>(Color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<Lambertian>(Color(0.1f, 0.2f, 0.5f));
-    auto material_left = make_shared<Dialectric>(1.5f);
-    auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0f);
+    //world.add(make_shared<Sphere>(Point3(0.0, -105.5, -1.0), 100.0, material_ground));
+    //world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
+    //world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
+    //// world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
+    //world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
 
-    world.add(make_shared<Sphere>(Point3(0.0, -100.5, -1.0), 100.0, material_ground));
-    world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 0.5, material_center));
-    world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, material_left));
-    //world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, material_left));
-    world.add(make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, material_right));
-    //// END
+    //Point3 lookFrom = Point3(-2.0f, 2.0f, 1.0f);
+    //Point3 lookAt = Point3(0.0f, 0.0f, -1.0f);
+    //Vec3 lookUp = Vec3(0.0f, 1.0f, 0.0f);
+
+    //Camera camera(lookFrom, lookAt, lookUp, 30.0f, aspect_ratio);
+
+    //// Testing different depth, the distance between ground and circiles. END
+    
+    /////Testing some views END
+
+    //auto material_ground = make_shared<Lambertian>(Color(0.2, 0.8, 0.2));
+    //auto material_center = make_shared<Lambertian>(Color(0.98, 0.97, 0.44));
+    //auto material_left = make_shared<Dielectric>(1.5);
+    //auto material_right = make_shared<Metal>(Color(0.8, 0.6, 0.2), 0.0);
+
+    //auto material_small1 = make_shared<Lambertian>(Color(0.0, 0.8, 0.85));
+
+    //world.add(make_shared<Sphere>(Point3(0.0, -1001, -1.0), 1000, material_ground));
+    //world.add(make_shared<Sphere>(Point3(0.0, 0.0, -1.0), 1.0, material_center));
+    //world.add(make_shared<Sphere>(Point3(-3.0, 0.0, -1.0), 1.0, material_left));
+    //world.add(make_shared<Sphere>(Point3(-4.0, 0.0, -0.5), 0.2, material_small1));
+    ////world.add(make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.45, material_left));
+    //world.add(make_shared<Sphere>(Point3(3.0, 0.0, -1.0), 1.0, material_right));
+
+    //Camera camera(Point3(0, 2, 3), Point3(0, 0, -1), Vec3(0, 1, 0), 90, aspect_ratio);
+
+    //// Testing some views END
+
+    ///// Book's final image
+
+    auto world = random_scene();
+
+    Point3 lookFrom = Point3(13, 2, 3);
+    Point3 lookAt = Point3(0, 0, 0);
+    Vec3 lookUp = Vec3(0, 1, 0);
+
+    Camera camera(lookFrom, lookAt, lookUp, 30.0f, aspect_ratio);
+
+    ///// Book's final image END
+
 
     float R = cos(pi / 4.0f);
 
@@ -158,7 +244,7 @@ int main() {
     //world.add(make_shared<Sphere>(Point3(-R, 0.0f, -1.0f), R, material_left));
     //world.add(make_shared<Sphere>(Point3(R, 0.0f, -1.0f), R, material_right));
 
-    Camera camera(Point3(-2.0f, 2.0f, 1.0f), Point3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f), 30.0f, aspect_ratio);
+
 
     // Ray trace pixels
 
@@ -193,12 +279,12 @@ int main() {
             // NORMAL SAMPLING END
 
             // Write pixel value to image
-            writeColor((j * imageWidth + i) * numChannels, pixel_color, pixels);
+            //writeColor(((imageHeight - j - 1) * imageWidth + i) * numChannels, pixel_color, pixels); // Corrected image
+            writeColor((j * imageWidth + i) * numChannels, pixel_color, pixels); // image is flipped upside down
             
         }
     }
 
-    // IMAGE IS FLIPPED, IT WILL BE FIXED LATER
 
     // Save image to file
     stbi_write_png("out.png", imageWidth, imageHeight, numChannels, pixels, imageWidth * numChannels);
